@@ -178,10 +178,116 @@ def plot_events( events, figax=None, field_dimen = (106.0,68), indicators = ['Ma
             ax.text( row['Start X'], row['Start Y'], textstring, fontsize=10, color=color)
     return fig,ax
 
+def plot_events_w_team_filter( events, figax=None, field_dimen = (106.0,68), indicators = ['Marker','Arrow'], color=['r','b'], marker_style = 'o', alpha = 0.5, annotate=False):
+    """ plot_events( events )
+    
+    Plots Metrica event positions on a football pitch. event data can be a single or several rows of a data frame. All distances should be in meters.
+    
+    Parameters
+    -----------
+        events: row (i.e. instant) of the home team tracking data frame
+        fig,ax: Can be used to pass in the (fig,ax) objects of a previously generated pitch. Set to (fig,ax) to use an existing figure, or None (the default) to generate a new pitch plot, 
+        field_dimen: tuple containing the length and width of the pitch in meters. Default is (106,68)
+        indicators: List containing choices on how to plot the event. 'Marker' places a marker at the 'Start X/Y' location of the event; 'Arrow' draws an arrow from the start to end locations. Can choose one or both.
+        color: color of indicator. Default is 'r' (red)
+        marker_style: Marker type used to indicate the event position. Default is 'o' (filled ircle).
+        alpha: alpha of event marker. Default is 0.5    
+        annotate: Boolean determining whether text annotation from event data 'Type' and 'From' fields is shown on plot. Default is False.
+        
+    Returrns
+    -----------
+       fig,ax : figure and aixs objects (so that other data can be plotted onto the pitch)
+
+    """
+    if len(events['Team'].value_counts().index) > 1:
+        two_teams = True
+    else:
+        two_teams = False
+        
+
+    if figax is None: # create new pitch 
+        fig,ax = plot_pitch( field_dimen = field_dimen )
+    else: # overlay on a previously generated pitch
+        fig,ax = figax 
+    for i,row in events.iterrows():
+        if two_teams == False: 
+            if 'Marker' in indicators:
+                ax.plot(  row['Start X'], row['Start Y'], color+marker_style, alpha=alpha )
+            if 'Arrow' in indicators:
+                ax.annotate("", xy=row[['End X','End Y']], xytext=row[['Start X','Start Y']], alpha=alpha, arrowprops=dict(arrowstyle="->",color=color),annotation_clip=False)
+            if annotate:
+                textstring = row['Type'] + ': ' + row['From']
+                if row['Team']=='Home':
+                    ax.text( row['Start X'], row['Start Y'], textstring, fontsize=10, color=color[0])
+                elif row['Team']=='Away':
+                    ax.text( row['Start X'], row['Start Y'], textstring, fontsize=10, color=color[1])
+        else:
+            if 'Marker' in indicators:
+                if row['Team']=='Home':
+                    ax.plot(  row['Start X'], row['Start Y'], color[0]+marker_style, alpha=alpha )
+                elif row['Team']=='Away':
+                    ax.plot(  row['Start X'], row['Start Y'], color[1]+marker_style, alpha=alpha )
+            if 'Arrow' in indicators:
+                if row['Team']=='Home':
+                    ax.annotate("", xy=row[['End X','End Y']], xytext=row[['Start X','Start Y']], alpha=alpha, arrowprops=dict(arrowstyle="->",color=color[0]),annotation_clip=False)
+                elif row['Team']=='Away':
+                    ax.annotate("", xy=row[['End X','End Y']], xytext=row[['Start X','Start Y']], alpha=alpha, arrowprops=dict(arrowstyle="->",color=color[1]),annotation_clip=False)
+            if annotate:
+                textstring = row['Type'] + ': ' + row['From']
+                if row['Team']=='Home':
+                    ax.text( row['Start X'], row['Start Y'], textstring, fontsize=10, color=color[0])
+                elif row['Team']=='Away':
+                    ax.text( row['Start X'], row['Start Y'], textstring, fontsize=10, color=color[1])
+            
+                
+    return fig,ax
 
 
+def plot_shots( events, figax=None, field_dimen = (106.0,68), indicators = ['Marker','Arrow'], color='r', marker_style = 'o', alpha = 0.5, annotate=False):
+    """ plot_events( events )
+    
+    Plots Metrica event positions on a football pitch. event data can be a single or several rows of a data frame. All distances should be in meters.
+    
+    Parameters
+    -----------
+        events: row (i.e. instant) of the home team tracking data frame
+        fig,ax: Can be used to pass in the (fig,ax) objects of a previously generated pitch. Set to (fig,ax) to use an existing figure, or None (the default) to generate a new pitch plot, 
+        field_dimen: tuple containing the length and width of the pitch in meters. Default is (106,68)
+        indicators: List containing choices on how to plot the event. 'Marker' places a marker at the 'Start X/Y' location of the event; 'Arrow' draws an arrow from the start to end locations. Can choose one or both.
+        color: color of indicator. Default is 'r' (red)
+        marker_style: Marker type used to indicate the event position. Default is 'o' (filled ircle).
+        alpha: alpha of event marker. Default is 0.5    
+        annotate: Boolean determining whether text annotation from event data 'Type' and 'From' fields is shown on plot. Default is False.
+        
+    Returrns
+    -----------
+       fig,ax : figure and aixs objects (so that other data can be plotted onto the pitch)
 
+    """
 
+    if figax is None: # create new pitch 
+        fig,ax = plot_pitch( field_dimen = field_dimen )
+    else: # overlay on a previously generated pitch
+        fig,ax = figax 
+    for i,row in events.iterrows():
+        if 'Marker' in indicators:
+            print(row['Subtype'])
+            if 'TARGET-GOAL' in row['Subtype']:
+                ax.plot(  row['Start X'], row['Start Y'], 'b'+"*", alpha=1, markersize=20)
+            else:
+                ax.plot(  row['Start X'], row['Start Y'], color+marker_style, alpha=alpha )
+        if 'Arrow' in indicators:
+            if 'TARGET-GOAL' in row['Subtype']:
+                ax.annotate("", xy=row[['End X','End Y']], xytext=row[['Start X','Start Y']], alpha=1, arrowprops=dict(arrowstyle='->',color='b'),annotation_clip=False)
+            else:
+                ax.annotate("", xy=row[['End X','End Y']], xytext=row[['Start X','Start Y']], alpha=alpha, arrowprops=dict(arrowstyle="->",color=color,alpha=alpha),annotation_clip=False)
+        if annotate:
+            textstring = row['Type'] + ': ' + row['From']
+            if 'TARGET-GOAL' in row['Subtype']:
+                ax.text( row['Start X'], row['Start Y'], textstring, fontsize=10, color='b')
+            else:
+                ax.text( row['Start X'], row['Start Y'], textstring, fontsize=10, color=color,alpha=alpha)
+    return fig,ax
 
 
 
